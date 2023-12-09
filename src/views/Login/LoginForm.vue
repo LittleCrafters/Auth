@@ -120,7 +120,7 @@ async function submit() {
         </ElInput>
       </ElFormItem>
     </ElForm>
-    <ElButton class="w-full" @click="submit">登录</ElButton>
+    <ElButton type="primary" class="w-full" @click="submit">登录</ElButton>
   </div>
 </template>
 <style lang="scss" scoped>
