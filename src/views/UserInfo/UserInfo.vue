@@ -1,13 +1,37 @@
 <script setup lang="ts">
 import commonStyle from '@/styles/common.module.scss';
-import { ElButton, ElMessage, ElTable, ElTableColumn } from 'element-plus';
+import {
+  ElButton,
+  ElMessage,
+  ElTable,
+  ElTableColumn,
+  FormInstance,
+  FormRules,
+  ElInput,
+} from 'element-plus';
 import { addWhitelist, removeWhitelist, getWhitelist } from '@/apis/user';
 import { ref, onMounted } from 'vue';
 import { useUserStore } from '@/store';
 import { isString } from '@/utils/types';
 const tableData = ref<{ name: string }[]>([]);
 const userStore = useUserStore();
-const username = ref('');
+
+// 表单数据
+const formRef = ref<FormInstance>();
+const idRef = ref<InstanceType<typeof ElInput>>();
+const formData = ref({ id: '' });
+const formRules: FormRules = {
+  id: {
+    validator(_rule, value = '', cb) {
+      if (value.length < 2 || value.length > 16) {
+        cb('长度必须为2-16位');
+      } else if (!/^\w*$/.test(value)) {
+        cb('只允许使用字母，数字，特殊符号_');
+      }
+      cb();
+    },
+  },
+};
 function loadTableData() {
   getWhitelist({ qq: userStore.qq, token: userStore.token }).then(
     ({ data: { data } = {} }) => {
@@ -19,13 +43,15 @@ function loadTableData() {
     },
   );
 }
-function addUser() {
+async function addUser() {
+  idRef.value?.focus();
+  await formRef.value?.validate();
   addWhitelist({
     qq: userStore.qq,
-    id: username.value,
+    id: formData.value.id,
     token: userStore.token,
   }).then(() => {
-    username.value = '';
+    formData.value.id = '';
     ElMessage.success('添加成功');
     loadTableData();
   });
@@ -45,13 +71,22 @@ onMounted(loadTableData);
 
 <template>
   <div :class="commonStyle.contentArea" class="flex flex-col">
-    <div class="mb-2">
-      <ElInput v-model="username" @keyup.enter="addUser">
-        <template #append>
-          <ElButton @click="addUser">添加用户</ElButton>
-        </template>
-      </ElInput>
-    </div>
+    <ElForm ref="formRef" :model="formData" :rules="formRules">
+      <ElFormItem prop="id">
+        <ElInput
+          ref="idRef"
+          v-model="formData.id"
+          placeholder="请输入用户名"
+          :validate-event="false"
+          @keyup.enter="addUser"
+          @blur="formRef?.clearValidate()"
+        >
+          <template #append>
+            <ElButton @click="addUser()">添加用户</ElButton>
+          </template>
+        </ElInput>
+      </ElFormItem>
+    </ElForm>
     <ElTable class="flex-1" :data="tableData">
       <ElTableColumn label="用户名" prop="name" />
       <ElTableColumn label="操作" width="80">

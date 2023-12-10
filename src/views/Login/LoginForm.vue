@@ -101,7 +101,9 @@ async function submit() {
       @keyup.enter="submit"
     >
       <ElFormItem prop="qq">
-        <ElInput v-model="formData.qq" placeholder="请输入QQ号" />
+        <ElInput v-model="formData.qq" placeholder="请输入QQ号">
+          <template #suffix>@qq.com</template>
+        </ElInput>
       </ElFormItem>
       <ElFormItem ref="tokenFormItemRef" prop="token">
         <ElInput
